@@ -119,39 +119,39 @@ Hyperliquid AI-Driven Multi-Agent Trading System の開発タスク一覧。
 
 ### プロジェクト基盤
 
-- [ ] Next.js プロジェクトの初期化（App Router / TypeScript / Tailwind）
-- [ ] FastAPI との API 連携設定（fetch / SWR）
-- [ ] 認証・アクセス制限の実装（オプション）
+- [x] Next.js プロジェクトの初期化（App Router / TypeScript / Tailwind）
+- [x] FastAPI との API 連携設定（fetch / SWR）
+- [ ] 認証・アクセス制限の実装（Google アカウント認証 — 将来対応）
 
 ### ダッシュボード画面
 
-- [ ] 現在のポジション表示コンポーネント
-- [ ] 有効証拠金・未実現損益の表示
-- [ ] リアルタイム更新（ポーリング or WebSocket）
+- [x] 現在のポジション表示コンポーネント
+- [x] 有効証拠金・未実現損益の表示
+- [x] リアルタイム更新（SWR ポーリング）
 
 ### 議論ログビューア
 
-- [ ] AI 議論ログ一覧の取得・表示
-- [ ] チャット風 UI の実装（エージェント別色分け）
-- [ ] マスターエージェントの最終判断の強調表示
+- [x] AI 議論ログ一覧の取得・表示
+- [x] チャット風 UI の実装（エージェント別色分け）
+- [x] マスターエージェントの最終判断の強調表示
 
 ### 取引履歴
 
-- [ ] 取引履歴一覧のテーブル表示
+- [x] 取引履歴一覧のテーブル表示
 - [ ] 各取引の詳細（判断根拠・議論ログ）へのリンク
 
 ### 設定画面
 
-- [ ] リスク率・レバレッジ等の設定表示
-- [ ] 設定変更フォームと API 連携
+- [x] リスク率・レバレッジ等の設定表示
+- [x] 設定変更フォームと API 連携
 
 ### FastAPI エンドポイント（フロント向け）
 
-- [ ] `GET /api/position` — 現在のポジション
-- [ ] `GET /api/logs` — 議論ログ一覧
-- [ ] `GET /api/history` — 取引履歴
-- [ ] `GET /api/settings` — 設定取得
-- [ ] `PUT /api/settings` — 設定更新
+- [x] `GET /api/position` — 現在のポジション
+- [x] `GET /api/logs` — 議論ログ一覧
+- [x] `GET /api/history` — 取引履歴
+- [x] `GET /api/settings` — 設定取得
+- [x] `PUT /api/settings` — 設定更新
 
 ---
 
