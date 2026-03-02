@@ -16,7 +16,7 @@ target_metadata = Base.metadata
 
 def get_url() -> str:
     return (
-        f"mysql+mysqlclient://{settings.MYSQL_USER}:{settings.MYSQL_PASSWORD}"
+        f"mysql+pymysql://{settings.MYSQL_USER}:{settings.MYSQL_PASSWORD}"
         f"@{settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{settings.MYSQL_DATABASE}"
     )
 
