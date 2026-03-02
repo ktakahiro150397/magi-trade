@@ -3,7 +3,8 @@
 Runs every 15 minutes to:
 1. Fetch and store OHLCV / Funding Rate / HLP data
 2. Calculate technical indicators
-3. Generate AI payload (Step 2 onwards: trigger AI agents)
+3. Generate AI payload
+4. Run multi-agent deliberation and save results to DB
 """
 
 import asyncio
@@ -45,7 +46,7 @@ async def run_data_collection() -> None:
         for tf in TIMEFRAMES:
             await calculate_and_store_indicators(db, symbol=SYMBOL, timeframe=tf)
 
-        # Generate AI payload (logged for now; Step 2 will pass this to agents)
+        # Generate AI payload
         payload = await generate_ai_payload(db, symbol=SYMBOL)
         logger.info(
             "AI payload ready: symbol=%s price=%s",
@@ -56,10 +57,48 @@ async def run_data_collection() -> None:
         logger.info("=== Data collection cycle completed ===")
 
 
+async def run_agent_cycle() -> None:
+    """Run the multi-agent deliberation cycle and persist results to DB."""
+    from app.services.agents import run_agent_session
+    from app.services.llm import create_llm_client
+
+    async with AsyncSessionLocal() as db:
+        logger.info("=== Agent cycle started ===")
+
+        # Build the AI market payload
+        payload = await generate_ai_payload(db, symbol=SYMBOL)
+        if not payload.get("current_price"):
+            logger.warning("No market data available; skipping agent cycle")
+            return
+
+        # Create LLM client from configuration
+        client = create_llm_client()
+        logger.info("Using LLM backend: %s", client.name)
+
+        try:
+            state = await run_agent_session(
+                market_data=payload,
+                client=client,
+                db=db,
+            )
+            decision = state.get("final_decision")
+            if decision:
+                logger.info(
+                    "Agent session complete: action=%s confidence=%.2f session_id=%s",
+                    decision.action,
+                    decision.confidence,
+                    state.get("session_id"),
+                )
+        except Exception:
+            logger.exception("Agent cycle failed")
+
+        logger.info("=== Agent cycle completed ===")
+
+
 def create_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler()
 
-    # Run at the start of every 15-minute mark (e.g., :00, :15, :30, :45)
+    # Data collection: every 15 minutes
     scheduler.add_job(
         run_data_collection,
         CronTrigger(minute="0,15,30,45"),
@@ -67,6 +106,16 @@ def create_scheduler() -> AsyncIOScheduler:
         name="Market data collection + indicator calculation",
         misfire_grace_time=60,
     )
+
+    # Agent deliberation: every 15 minutes (offset by 1 minute to let data settle)
+    scheduler.add_job(
+        run_agent_cycle,
+        CronTrigger(minute="1,16,31,46"),
+        id="agent_cycle",
+        name="Multi-agent trading deliberation",
+        misfire_grace_time=60,
+    )
+
     return scheduler
 
 

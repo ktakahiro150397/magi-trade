@@ -15,9 +15,20 @@ class Settings(BaseSettings):
     HL_WALLET_ADDRESS: str = ""
     HL_PRIVATE_KEY: str = ""
 
-    # LLM API
+    # LLM API (direct API access)
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
+
+    # LLM backend selection
+    # Supported: copilot_cli | claude_code_cli | codex_cli | gemini_cli | mock
+    LLM_BACKEND: str = "mock"
+
+    # GitHub Copilot CLI authentication (fine-grained PAT with "Copilot Requests" permission)
+    GH_TOKEN: str = ""
+
+    # LLM CLI subprocess timeout (seconds)
+    LLM_TIMEOUT: float = 120.0
 
     # Trading parameters
     RISK_PERCENT: float = 1.0
