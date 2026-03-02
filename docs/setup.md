@@ -210,7 +210,168 @@ pytest -v
 
 ---
 
-## 9. よくあるトラブル
+## 9. AI エージェントのテスト動作確認
+
+### 9-1. LLM バックエンドの設定
+
+`.env` で使用するバックエンドを選択します。
+
+```env
+# ---- LLM バックエンド ----
+# まずはモックで動作確認する（実際の CLI は不要）
+LLM_BACKEND=mock
+
+# GitHub Copilot CLI を使う場合
+# LLM_BACKEND=copilot_cli
+# GH_TOKEN=ghp_...   # fine-grained PAT（"Copilot Requests" 権限が必要）
+
+# Claude Code CLI を使う場合
+# LLM_BACKEND=claude_code_cli
+
+# Codex CLI を使う場合
+# LLM_BACKEND=codex_cli
+# OPENAI_API_KEY=sk-...
+
+# Gemini CLI を使う場合
+# LLM_BACKEND=gemini_cli
+# GOOGLE_API_KEY=...
+```
+
+### 9-2. モック応答でエージェントサイクルを1回手動実行
+
+`LLM_BACKEND=mock` の状態で Docker コンテナを起動し、エージェントサイクルを
+手動で呼び出します。
+
+```bash
+# コンテナを起動（DB + バックエンド）
+docker compose up -d db backend
+
+# マイグレーション（初回のみ）
+docker compose exec backend alembic upgrade head
+
+# Python コンソールでエージェントサイクルを1回実行
+docker compose exec backend python - <<'EOF'
+import asyncio
+from app.core.database import AsyncSessionLocal
+from app.services.agents import run_agent_session
+from app.services.indicators import generate_ai_payload
+from app.services.llm import create_llm_client
+
+async def main():
+    async with AsyncSessionLocal() as db:
+        # 市場データペイロード生成（DBにデータがない場合は空になる）
+        payload = await generate_ai_payload(db, symbol="BTC")
+
+        # 市場データが空の場合はダミーデータを使用
+        if not payload.get("current_price"):
+            payload = {
+                "symbol": "BTC",
+                "generated_at": "2024-01-01T00:00:00",
+                "current_price": 50000.0,
+                "primary_timeframe": "15m",
+                "ohlcv": [],
+                "indicators": {},
+                "funding_rate": None,
+            }
+
+        client = create_llm_client()   # LLM_BACKEND=mock を使用
+        print(f"LLM backend: {client.name}")
+
+        state = await run_agent_session(market_data=payload, client=client, db=db)
+        decision = state.get("final_decision")
+        print(f"Final decision: action={decision.action} confidence={decision.confidence:.2f}")
+        print(f"Reasoning: {decision.reasoning}")
+        print(f"Session ID: {state.get('session_id')}")
+
+asyncio.run(main())
+EOF
+```
+
+### 9-3. DB 内容の確認
+
+エージェントサイクル実行後、MySQL に結果が保存されていることを確認します。
+
+```bash
+docker compose exec db mysql -u magi -p magi_trade
+```
+
+MySQL プロンプトで以下を実行します。
+
+```sql
+-- エージェントセッション一覧
+SELECT id, created_at FROM agent_sessions ORDER BY id DESC LIMIT 5;
+
+-- 各エージェントの意見
+SELECT s.id AS session_id, o.agent_name, o.action, o.confidence, LEFT(o.reasoning, 60) AS reasoning
+FROM agent_sessions s
+JOIN agent_opinions o ON o.session_id = s.id
+ORDER BY s.id DESC, o.agent_name;
+
+-- マスターエージェントの最終判断
+SELECT s.id AS session_id, d.action, d.confidence, LEFT(d.reasoning, 80) AS reasoning
+FROM agent_sessions s
+JOIN final_decisions d ON d.session_id = s.id
+ORDER BY s.id DESC
+LIMIT 5;
+```
+
+### 9-4. API エンドポイントで議論ログを取得
+
+```bash
+# 最新 20 件のエージェントセッション（意見 + 最終判断）を取得
+curl -s http://localhost:8000/api/logs | python3 -m json.tool | head -60
+```
+
+### 9-5. ユニットテストの実行（Docker なし・モック使用）
+
+DB や LLM CLI なしでテスト全件を実行できます。
+
+```bash
+cd backend
+pytest tests/test_llm_client.py tests/test_agents.py tests/test_data_collector.py -v
+```
+
+出力例:
+```
+tests/test_llm_client.py::TestExtractJson::test_plain_json PASSED
+tests/test_agents.py::TestRunAgentSession::test_full_workflow_with_mock_db PASSED
+...
+35 passed in 1.34s
+```
+
+---
+
+## 10. GitHub Copilot CLI のセットアップ
+
+GitHub Copilot CLI（新しいスタンドアロン版 `copilot` コマンド）を使う手順です。
+
+> **参考:** [GitHub Copilot CLI 公式ドキュメント](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli)
+
+### 認証トークンの取得
+
+1. GitHub の Settings → Developer settings → Personal access tokens → Fine-grained tokens へ移動
+2. 新規トークンを生成し、**Copilot Requests** 権限を付与
+3. 生成したトークンを `.env` の `GH_TOKEN` に設定
+
+```env
+LLM_BACKEND=copilot_cli
+GH_TOKEN=ghp_your_token_here
+```
+
+### 動作確認
+
+```bash
+# コンテナ内で copilot CLI が使えるか確認
+docker compose exec backend copilot --version
+
+# エージェントサイクルをモックから Copilot CLI に切り替えて実行
+# （.env の LLM_BACKEND=copilot_cli にした後、コンテナを再起動）
+docker compose restart backend
+```
+
+---
+
+## 11. よくあるトラブル
 
 ### MySQL コンテナが起動しない
 
@@ -232,3 +393,19 @@ docker compose exec backend alembic upgrade head
 
 - Hyperliquid API はメインネット／テストネットの両方に接続できます。
 - テスト時は `data_collector.py` 内の `constants.MAINNET_API_URL` を `constants.TESTNET_API_URL` に変更してください。
+
+### `copilot` コマンドが見つからない
+
+- Docker イメージに `copilot` CLI が含まれていることを確認してください。
+- または `Dockerfile` に以下を追加します：
+
+```dockerfile
+# GitHub Copilot CLI のインストール
+RUN curl -fsSL https://github.com/github/copilot-cli/releases/latest/download/copilot-linux-amd64 \
+    -o /usr/local/bin/copilot && chmod +x /usr/local/bin/copilot
+```
+
+### LLM バックエンドのタイムアウト
+
+- デフォルトのタイムアウトは 120 秒です。`.env` の `LLM_TIMEOUT` で変更可能です。
+- CLI ツールのレスポンスが遅い場合は `LLM_TIMEOUT=180` のように延長してください。

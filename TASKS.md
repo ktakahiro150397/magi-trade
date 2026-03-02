@@ -53,27 +53,35 @@ Hyperliquid AI-Driven Multi-Agent Trading System の開発タスク一覧。
 
 ### LLM 連携
 
-- [ ] LLM API クライアントの実装（Anthropic / OpenAI 切り替え対応）
-- [ ] プロンプトテンプレート管理モジュールの作成
+- [x] LLM クライアント抽象基底クラス `LLMClient` の実装（CLI / API 共通インターフェース）
+- [x] CLI バックエンドの実装
+  - [x] GitHub Copilot CLI クライアント（新スタンドアロン `copilot` コマンド対応）
+  - [x] Claude Code CLI クライアント（`claude -p`）
+  - [x] Codex CLI クライアント（`codex --quiet`）
+  - [x] Gemini CLI クライアント（`gemini --prompt`）
+- [x] モック LLM クライアント（テスト・ドライラン用）
+- [x] LLM バックエンドファクトリ（`create_llm_client()`）
+- [x] プロンプトテンプレート管理モジュールの作成
 
 ### エージェント実装
 
-- [ ] Trend Agent のプロンプト設計・実装
-- [ ] Contrarian Agent のプロンプト設計・実装
-- [ ] Risk Agent のプロンプト設計・実装
-- [ ] Master Agent の集約ロジック・プロンプト設計・実装
+- [x] `TradingState` / `AgentOpinionData` / `MasterDecisionData` の型定義
+- [x] Trend Agent のプロンプト設計・実装
+- [x] Contrarian Agent のプロンプト設計・実装
+- [x] Risk Agent のプロンプト設計・実装
+- [x] Master Agent の集約ロジック・プロンプト設計・実装
 
 ### LangGraph 統合
 
-- [ ] `TradingState` の型定義
-- [ ] LangGraph グラフの構築（並列実行 + 集約）
-- [ ] エージェントの並列実行テスト
+- [x] LangGraph グラフの構築（sub_agents → master → save の逐次 + 内部 asyncio.gather で並列）
+- [x] エージェントの並列実行（asyncio.gather）
 
 ### 保存・ログ
 
-- [ ] 各エージェントの意見を DB に保存する実装
-- [ ] マスターエージェントの最終判断を DB に保存する実装
-- [ ] 議論ログの取得 API エンドポイントの実装
+- [x] 各エージェントの意見を DB に保存する実装
+- [x] マスターエージェントの最終判断を DB に保存する実装
+- [x] 議論ログの取得 API エンドポイントの実装（`GET /api/logs`）
+- [x] スケジューラへのエージェントサイクル統合（15分ごと自動実行）
 
 ---
 
