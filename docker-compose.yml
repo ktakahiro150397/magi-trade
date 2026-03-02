@@ -1,0 +1,69 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: magi_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-magi_trade}
+      MYSQL_USER: ${MYSQL_USER:-magi}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-magipassword}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: magi_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=${MYSQL_USER:-magi}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-magipassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-magi_trade}
+      - HL_WALLET_ADDRESS=${HL_WALLET_ADDRESS:-}
+      - HL_PRIVATE_KEY=${HL_PRIVATE_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - RISK_PERCENT=${RISK_PERCENT:-1.0}
+      - DEFAULT_LEVERAGE=${DEFAULT_LEVERAGE:-5}
+      - MAX_HOLD_HOURS=${MAX_HOLD_HOURS:-24}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # frontend: Step 4 で実装予定
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: magi_frontend
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - backend
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://localhost:8000
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
+
+volumes:
+  mysql_data:

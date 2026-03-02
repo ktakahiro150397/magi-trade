@@ -16,36 +16,36 @@ Hyperliquid AI-Driven Multi-Agent Trading System の開発タスク一覧。
 
 ### インフラ構築
 
-- [ ] `docker-compose.yml` の作成（MySQL / FastAPI / Next.js）
-- [ ] MySQL コンテナの設定（ボリューム・初期化スクリプト）
-- [ ] FastAPI コンテナの設定（Dockerfile）
-- [ ] `.env.example` の作成
-- [ ] Alembic によるマイグレーション環境の構築
+- [x] `docker-compose.yml` の作成（MySQL / FastAPI / Next.js）
+- [x] MySQL コンテナの設定（ボリューム・初期化スクリプト）
+- [x] FastAPI コンテナの設定（Dockerfile）
+- [x] `.env.example` の作成
+- [x] Alembic によるマイグレーション環境の構築
 
 ### データベース設計・実装
 
-- [ ] `market_data` テーブルの作成（OHLCV）
-- [ ] `funding_rates` テーブルの作成
-- [ ] `hlp_data` テーブルの作成
-- [ ] `agent_sessions` テーブルの作成
-- [ ] `agent_opinions` テーブルの作成
-- [ ] `final_decisions` テーブルの作成
-- [ ] `trades` テーブルの作成
-- [ ] `trade_settings` テーブルの作成
+- [x] `market_data` テーブルの作成（OHLCV）
+- [x] `funding_rates` テーブルの作成
+- [x] `hlp_data` テーブルの作成
+- [x] `agent_sessions` テーブルの作成
+- [x] `agent_opinions` テーブルの作成
+- [x] `final_decisions` テーブルの作成
+- [x] `trades` テーブルの作成
+- [x] `trade_settings` テーブルの作成
 
 ### データ取得モジュール
 
-- [ ] `hyperliquid-python-sdk` の導入・接続確認
-- [ ] OHLCV データ取得モジュールの実装（1m / 15m / 30m / 1h）
-- [ ] Funding Rate 取得モジュールの実装
-- [ ] HLP データ取得モジュールの実装
-- [ ] 取得データの MySQL 保存ロジックの実装
-- [ ] 重複保存防止（UPSERT 等）の実装
+- [x] `hyperliquid-python-sdk` の導入・接続確認
+- [x] OHLCV データ取得モジュールの実装（1m / 15m / 30m / 1h）
+- [x] Funding Rate 取得モジュールの実装
+- [x] HLP データ取得モジュールの実装
+- [x] 取得データの MySQL 保存ロジックの実装
+- [x] 重複保存防止（UPSERT 等）の実装
 
 ### データ整形・変換
 
-- [ ] テクニカル指標計算モジュールの実装（RSI / EMA / ATR / MACD / BB）
-- [ ] AI へ渡す JSON フォーマット生成ロジックの実装
+- [x] テクニカル指標計算モジュールの実装（RSI / EMA / ATR / MACD / BB）
+- [x] AI へ渡す JSON フォーマット生成ロジックの実装
 
 ---
 
