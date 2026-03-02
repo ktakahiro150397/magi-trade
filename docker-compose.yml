@@ -51,12 +51,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* はビルド時に焼き込まれるため args で渡す（environment ではなく）
+        # 本番環境ではホストのパブリックIPまたはドメインを .env で上書きすること
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     container_name: magi_frontend
     restart: unless-stopped
     depends_on:
       - backend
-    environment:
-      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
     ports:
       - "3000:3000"
 
