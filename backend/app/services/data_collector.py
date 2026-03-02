@@ -19,10 +19,10 @@ TIMEFRAMES = ["1m", "15m", "30m", "1h"]
 
 # Map our timeframe strings to Hyperliquid interval codes
 _TF_MAP: dict[str, str] = {
-    "1m": "1",
-    "15m": "15",
-    "30m": "30",
-    "1h": "60",
+    "1m": "1m",
+    "15m": "15m",
+    "30m": "30m",
+    "1h": "1h",
 }
 
 
