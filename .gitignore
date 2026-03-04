@@ -43,3 +43,5 @@ db/
 
 # Alembic
 *.pyc
+frontend/.next/*
+frontend/node_modules/
