@@ -45,7 +45,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://magi_frontend:3000",  # Docker internal network
+    ],
+    allow_origin_regex=r"https://.*\.app\.github\.dev",  # GitHub Codespaces
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
