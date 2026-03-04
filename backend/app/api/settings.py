@@ -35,7 +35,15 @@ async def get_settings(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(TradeSetting).limit(1))
     setting = result.scalar_one_or_none()
     if setting is None:
-        raise HTTPException(status_code=404, detail="Settings not found")
+        setting = TradeSetting(
+            risk_percent=1.0,
+            leverage=5,
+            max_hold_hours=48,
+            updated_at=datetime.utcnow(),
+        )
+        db.add(setting)
+        await db.commit()
+        await db.refresh(setting)
     return setting
 
 
