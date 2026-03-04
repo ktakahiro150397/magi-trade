@@ -16,6 +16,8 @@ env/
 
 # Environment variables
 .env
+.env.local
+frontend/.env.local
 
 # pytest
 .pytest_cache/
